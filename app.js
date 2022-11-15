@@ -1,33 +1,33 @@
 
+require('dotenv').config();
 const express = require("express");
 const request = require("postman-request");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
 
+const app = express();
+
+app.set("view engine", "ejs");  //to use embedded javascript templates instead of html files
+app.use(express.static("public")); //to serve static files
+app.use(express.urlencoded({ extended: true })); // to req input data in forms (ejs or html) with req.body.
 
 mongoose.connect("mongodb://0.0.0.0:27017/userDB");
 
 //a)Schema
 const userSchema = new mongoose.Schema({
-    email: {type: String},
-    password: {type: String},
+    email: { type: String },
+    password: { type: String },
 })
 
 //a1)Encryption
-const secret = "Whatagoodgirl";
-userSchema.plugin(encrypt, {secret: secret, encryptedFields: ["password"]});
+
+userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ["password"] });
 
 //b)Model
 const User = mongoose.model("User", userSchema); 
 
 
-const app = express();
-
-
-app.set("view engine", "ejs");  //to use embedded javascript templates instead of html files
-app.use(express.static("public")); //to serve static files
-app.use(express.urlencoded({ extended: true })); // to req input data in forms (ejs or html) with req.body.
 
 
 app.get("/", function (req, res) {
