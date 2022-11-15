@@ -3,6 +3,8 @@ const express = require("express");
 const request = require("postman-request");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
+
 
 mongoose.connect("mongodb://0.0.0.0:27017/userDB");
 
@@ -11,6 +13,10 @@ const userSchema = new mongoose.Schema({
     email: {type: String},
     password: {type: String},
 })
+
+//a1)Encryption
+const secret = "Whatagoodgirl";
+userSchema.plugin(encrypt, {secret: secret, encryptedFields: ["password"]});
 
 //b)Model
 const User = mongoose.model("User", userSchema); 
