@@ -34,7 +34,8 @@ const userSchema = new mongoose.Schema({
     email: String,
     password: String,
     googleId: String,
-    facebookId: String
+    facebookId: String,
+    secret: String
 });
 
 userSchema.plugin(passportLocalMongoose); //hash and salt passwords, and save users in mongoDB database.
@@ -112,7 +113,7 @@ app.get("/auth/facebook/secrets",
         });
 
 
-//////////////////////////
+////////////////////////// Get
 
 app.get("/login", function (req, res) {
     res.render("login");
@@ -123,12 +124,24 @@ app.get("/register", function (req, res) {
 });
 
 app.get("/secrets", (req, res) => {
-    if (req.isAuthenticated()){
-        res.render("secrets");
+
+    User.find({"secret": {$ne:null}}, (err, i)=> {
+        if (err) {
+            console.log(err);
+        } else if (i) {
+            res.render("secrets", {usersWithSecrets: i})
+        }
+    })
+
+});
+
+app.get("/submit", (req, res) => {
+    if (req.isAuthenticated()) {
+        res.render("submit");
     } else {
         res.redirect("/login");
     }
-});
+})
 
 app.get('/logout', (req,res) => {
     req.logout( (err) => {
@@ -140,7 +153,9 @@ app.get('/logout', (req,res) => {
     });
 });
 
-app.post('/register', (req, res) =>{   
+////////////////////////// Post
+
+app.post("/register", (req, res) =>{   
     
     User.register({username: req.body.username}, req.body.password, (err, user) => {
         if (err) {
@@ -155,7 +170,7 @@ app.post('/register', (req, res) =>{
    
 })
 
-app.post('/login', (req, res) => {
+app.post("/login", (req, res) => {
 
     const user = new User ({
         username: req.body.user,
@@ -172,6 +187,25 @@ app.post('/login', (req, res) => {
         }
     });
 
+});
+
+app.post("/submit", (req, res) => {
+    const submittedSecret = req.body.secret;
+
+    console.log(req.user);
+
+    User.findById(req.user.id, (err, foundUser) => {
+        if (err) {
+            console.log(err);
+        } else {
+            if (foundUser) {
+                foundUser.secret = submittedSecret;
+                foundUser.save(()=>{
+                    res.redirect("/secrets");
+                })
+            }
+        }
+    })
 });
 
 
